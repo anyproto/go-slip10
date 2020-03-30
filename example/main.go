@@ -29,7 +29,7 @@ func main() {
 	// adds 0x00 prefix for the public key. Because we are using native crypto/ed25519 for the keypair we won't do this for the Keypair() method
 	fmt.Printf("%x\n", pub)
 
-	// but you can use node.PublicKey() to get the public key with prefix
+	// but you can use node.PublicKeyWithPrefix() to get the public key with prefix
 	pubK := node.PublicKeyWithPrefix()
 
 	// prints 001932a5270f335bed617d5b935c80aedb1a35bd9fc1e31acafd5372c30f5c1187

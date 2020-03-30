@@ -38,7 +38,7 @@ Golang SLIP-0010 implementation(ed25519 only) according to the https://github.co
     	// adds 0x00 prefix for the public key. Because we are using native crypto/ed25519 for the keypair we won't do this for the Keypair() method
     	fmt.Printf("%x\n", pub)
 
-    	// but you can use node.PublicKey() to get the public key with prefix
+    	// but you can use node.PublicKeyWithPrefix() to get the public key with prefix
     	pubK, err := node.PublicKeyWithPrefix()
     	if err != nil {
     		panic(err)
