@@ -32,7 +32,7 @@ func TestDeriveForPath_Vector1(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "Key(m) – master node",
+			name: "Key(m) – master Node",
 			args: args{
 				path: "m",
 				seed: seed,
@@ -149,7 +149,7 @@ func TestDeriveForPath_Vector2(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "Key(m) – master node",
+			name: "Key(m) – master Node",
 			args: args{
 				path: "m",
 				seed: seed,
