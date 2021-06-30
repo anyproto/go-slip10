@@ -6,6 +6,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha512"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -125,6 +126,20 @@ func (k *Node) PrivateKey() []byte {
 func (k *Node) PublicKeyWithPrefix() []byte {
 	pub, _ := k.Keypair()
 	return append([]byte{0x00}, pub...)
+}
+
+func (k Node) MarshalJSON() ([]byte, error) {
+	sum := append(k.key, k.chainCode...)
+	return json.Marshal(sum)
+}
+
+func (k *Node) UnmarshalJSON(b []byte) error {
+	var sum []byte
+	if err := json.Unmarshal(b, &sum); err != nil {
+		return err
+	}
+	toNode(k, sum)
+	return nil
 }
 
 // IsValidPath check whether or not the path has valid segments.
