@@ -3,6 +3,7 @@ package slip10
 import (
 	"bytes"
 	"encoding/hex"
+	"encoding/json"
 	"reflect"
 	"testing"
 )
@@ -32,7 +33,7 @@ func TestDeriveForPath_Vector1(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "Key(m) – master node",
+			name: "Key(m) – master Node",
 			args: args{
 				path: "m",
 				seed: seed,
@@ -149,7 +150,7 @@ func TestDeriveForPath_Vector2(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "Key(m) – master node",
+			name: "Key(m) – master Node",
 			args: args{
 				path: "m",
 				seed: seed,
@@ -274,5 +275,35 @@ func TestNewMasterNode(t *testing.T) {
 				t.Errorf("NewMasterNode() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestMarshallJSONNode(t *testing.T) {
+	seed := hexMustDecode("fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542")
+	node, err := NewMasterNode(seed)
+
+	if err != nil {
+		t.Errorf("NewMasterNode() error = %v", err)
+		return
+	}
+
+	marshalledNode, err := node.MarshalJSON()
+
+	if err != nil {
+		t.Errorf("Node.MarshalJSON() failed because: %v", err)
+		return
+	}
+
+	unmarshalledNode := &Node{}
+
+	err = json.Unmarshal(marshalledNode, unmarshalledNode)
+	if err != nil {
+		t.Errorf("json.Unmarshal() on Node failed because: %v", err)
+		return
+	}
+
+	if !reflect.DeepEqual(node, unmarshalledNode) {
+		t.Errorf("Marshalled Node doesn't match:\n\t%v\nwant:\n\t%v", unmarshalledNode, node)
+		return
 	}
 }

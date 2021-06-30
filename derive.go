@@ -6,6 +6,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha512"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -27,23 +28,14 @@ var (
 	pathRegex = regexp.MustCompile("^m(/[0-9]+')*$")
 )
 
-type Node interface {
-	Derive(i uint32) (Node, error)
-
-	Keypair() (ed25519.PublicKey, ed25519.PrivateKey)
-	PrivateKey() []byte
-	PublicKeyWithPrefix() []byte
-	RawSeed() []byte
-}
-
-type node struct {
+type Node struct {
 	chainCode []byte
 	key       []byte
 }
 
 // DeriveForPath derives key for a path in BIP-44 format and a seed.
 // Ed25119 derivation operated on hardened keys only.
-func DeriveForPath(path string, seed []byte) (Node, error) {
+func DeriveForPath(path string, seed []byte) (*Node, error) {
 	if !IsValidPath(path) {
 		return nil, ErrInvalidPath
 	}
@@ -72,21 +64,19 @@ func DeriveForPath(path string, seed []byte) (Node, error) {
 }
 
 // NewMasterNode generates a new master key from seed.
-func NewMasterNode(seed []byte) (Node, error) {
+func NewMasterNode(seed []byte) (*Node, error) {
 	hash := hmac.New(sha512.New, []byte(seedModifier))
 	_, err := hash.Write(seed)
 	if err != nil {
 		return nil, err
 	}
 	sum := hash.Sum(nil)
-	key := &node{
-		key:       sum[:32],
-		chainCode: sum[32:],
-	}
+	key := &Node{}
+	toNode(key, sum)
 	return key, nil
 }
 
-func (k *node) Derive(i uint32) (Node, error) {
+func (k *Node) Derive(i uint32) (*Node, error) {
 	// no public derivation for ed25519
 	if i < FirstHardenedIndex {
 		return nil, ErrNoPublicDerivation
@@ -103,15 +93,13 @@ func (k *node) Derive(i uint32) (Node, error) {
 		return nil, err
 	}
 	sum := hash.Sum(nil)
-	newKey := &node{
-		key:       sum[:32],
-		chainCode: sum[32:],
-	}
+	newKey := &Node{}
+	toNode(newKey, sum)
 	return newKey, nil
 }
 
-// PrivateKey returns private key for a derived private key.
-func (k *node) Keypair() (ed25519.PublicKey, ed25519.PrivateKey) {
+// Keypair returns the public and private key.
+func (k *Node) Keypair() (ed25519.PublicKey, ed25519.PrivateKey) {
 	reader := bytes.NewReader(k.key)
 	pub, priv, err := ed25519.GenerateKey(reader)
 	if err != nil {
@@ -123,21 +111,35 @@ func (k *node) Keypair() (ed25519.PublicKey, ed25519.PrivateKey) {
 }
 
 // RawSeed returns raw seed bytes
-func (k *node) RawSeed() []byte {
+func (k *Node) RawSeed() []byte {
 	return k.key
 }
 
 // PrivateKey returns private key seed bytes
-func (k *node) PrivateKey() []byte {
+func (k *Node) PrivateKey() []byte {
 	_, priv := k.Keypair()
 	return priv.Seed()
 }
 
 // PublicKeyWithPrefix returns public key with 0x00 prefix, as specified in the slip-10
 // https://github.com/satoshilabs/slips/blob/master/slip-0010/testvectors.py#L64
-func (k *node) PublicKeyWithPrefix() []byte {
+func (k *Node) PublicKeyWithPrefix() []byte {
 	pub, _ := k.Keypair()
 	return append([]byte{0x00}, pub...)
+}
+
+func (k Node) MarshalJSON() ([]byte, error) {
+	sum := append(k.key, k.chainCode...)
+	return json.Marshal(sum)
+}
+
+func (k *Node) UnmarshalJSON(b []byte) error {
+	var sum []byte
+	if err := json.Unmarshal(b, &sum); err != nil {
+		return err
+	}
+	toNode(k, sum)
+	return nil
 }
 
 // IsValidPath check whether or not the path has valid segments.
@@ -156,4 +158,9 @@ func IsValidPath(path string) bool {
 	}
 
 	return true
+}
+
+func toNode(node *Node, sum []byte) {
+	node.key = sum[:32]
+	node.chainCode = sum[32:]
 }
