@@ -70,10 +70,8 @@ func NewMasterNode(seed []byte) (*Node, error) {
 		return nil, err
 	}
 	sum := hash.Sum(nil)
-	key := &Node{
-		key:       sum[:32],
-		chainCode: sum[32:],
-	}
+	key := &Node{}
+	toNode(key, sum)
 	return key, nil
 }
 
@@ -94,10 +92,8 @@ func (k *Node) Derive(i uint32) (*Node, error) {
 		return nil, err
 	}
 	sum := hash.Sum(nil)
-	newKey := &Node{
-		key:       sum[:32],
-		chainCode: sum[32:],
-	}
+	newKey := &Node{}
+	toNode(newKey, sum)
 	return newKey, nil
 }
 
@@ -147,4 +143,9 @@ func IsValidPath(path string) bool {
 	}
 
 	return true
+}
+
+func toNode(node *Node, sum []byte) {
+	node.key = sum[:32]
+	node.chainCode = sum[32:]
 }
