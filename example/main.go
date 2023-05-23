@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	slip10 "github.com/anytypeio/go-slip10"
+	slip10 "github.com/anyproto/go-slip10"
 )
 
 func main() {
