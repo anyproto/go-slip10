@@ -277,6 +277,43 @@ func TestNewMasterNode(t *testing.T) {
 	}
 }
 
+func TestNewMasterNodeWithModifier(t *testing.T) {
+	seed := hexMustDecode("fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542")
+	modifier := "curve25519 seed"
+
+	type args struct {
+		seed []byte
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []byte
+		wantErr bool
+	}{
+		{
+			name: "get a master key with a custom seed modifier",
+			args: args{
+				seed: seed,
+			},
+			want:    hexMustDecode("088491f5b4dfafbe956de471f3db10e02d784bc76050ee3b7c3f11b9706d3730"),
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := NewMasterNodeWithModifier(modifier, tt.args.seed)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("NewMasterNodeWithModifier() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got.RawSeed(), tt.want) {
+				t.Errorf("NewMasterNodeWithModifier() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestMarshalUnmarshalNode(t *testing.T) {
 	seed := hexMustDecode("000102030405060708090a0b0c0d0e0f")
 	

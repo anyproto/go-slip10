@@ -1,6 +1,6 @@
 # Ed25519 private key derivation from master private key
 
-Golang SLIP-0010 implementation(ed25519 only) according to the https://github.com/satoshilabs/slips/blob/master/slip-0010.md
+Golang SLIP-0010 implementation(ed25519/curve25519 only) according to the https://github.com/satoshilabs/slips/blob/master/slip-0010.md
 
 ## Example
 ```go

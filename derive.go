@@ -17,7 +17,7 @@ const (
 	// https://youtu.be/2HrMlVr1QX8?t=390
 	FirstHardenedIndex = uint32(0x80000000)
 	// As in https://github.com/satoshilabs/slips/blob/master/slip-0010.md
-	seedModifier = "ed25519 seed"
+	DefaultSeedModifier = "ed25519 seed"
 )
 
 var (
@@ -82,10 +82,21 @@ func DeriveForPath(path string, rootSeed []byte) (Node, error) {
 //
 // Use this when you have the original root entropy and want to (re)build a tree
 // deterministically from the top (e.g., together with a path like "m/44'/...").
+// Uses DefaultSeedModifier as the seed modifier.
 // Security: anyone with rootSeed can derive the entire tree. Treat as highly sensitive.
 //
 // rootSeed: arbitrary-length seed per SLIP-0010 (typically 16–64 bytes).
 func NewMasterNode(rootSeed []byte) (Node, error) {
+	return NewMasterNodeWithModifier(DefaultSeedModifier, rootSeed)
+}
+
+// NewMasterNodeWithModifier is like NewMasterNode but with a custom seed modifier.
+//
+// This is for special cases not covered by the default function, such as deriving Curve25519 secrets.
+//
+// seedModifier: custom string used as a key for HMAC as per SLIP-0010.
+// rootSeed: arbitrary-length seed per SLIP-0010 (typically 16–64 bytes).
+func NewMasterNodeWithModifier(seedModifier string, rootSeed []byte) (Node, error) {
 	hash := hmac.New(sha512.New, []byte(seedModifier))
 	_, err := hash.Write(rootSeed)
 	if err != nil {
